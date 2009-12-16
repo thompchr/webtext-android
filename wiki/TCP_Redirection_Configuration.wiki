@@ -1,0 +1,18 @@
+#summary Instructions for configuring port redirection to the emulator
+#labels Featured
+
+In order to test this on an emulator, you must redirect the ports.  iJetty runs on 8080 on the device by default, but this can be changed.  We will use 8080 for this tutorial.  Let's say we want port 8081 on our host machine to point to the device's port 8080. This would allow us to view iJetty on the emulator by visiting http://localhost:8081.
+
+To do this, telnet to the emulator
+{{{
+telnet localhost 5554
+}}}
+
+where 5554 is the emulator identifier (the window title before the colon)
+
+Then enter
+{{{
+redir add tcp:8081:8080
+}}}
+
+I've discovered that sometimes this needs be done twice as the first attempt will result in an 'unknown command' error.
