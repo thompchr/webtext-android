@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>WebText Deck</title>
+
+<link rel="stylesheet" href="css/layout.css"/>
+<link rel="stylesheet" href="css/styles.css"/>
+<script src="http://www.google.com/jsapi"></script>
+<script src="scripts/structs.js"></script>
+<script>
+	var threads = new Array();
+	var currentContact;
+	var currentThread;
+	var currentAddress;
+
+	//Load jQuery
+	google.load("jquery", "1.3.2");
+	google.load("jqueryui", "1.7.2");
+
+	//Load all the threads and contacts
+	google.setOnLoadCallback(function() {
+			$("#message_area").keyup(function(){
+				var length = $(this).val().length;
+				$("#chars_remaining").html(160 - length);
+			});
+			$("#submit_button").click(function(){
+				if ($('#message_area').val() != ""){
+					$.post("/mine/data/?type=2",{
+						dest: currentContact,
+						msg: $('#message_area').val()
+					});
+					$("<div class=\"message_body\"></div>").html("Me: " + $('#message_area').val()).appendTo('#message_container');
+					$('#message_area').val("");
+					$("#chars_remaining").html(160);
+				} 
+			});
+				
+			$.ajax({
+				type:"GET",
+				url:"/mine/data/?type=0",
+				datatype: "xml",
+				success:
+					//process the received contact list
+					function(xml){
+						
+						$(xml).find('Thread').each(function(){
+							var address = $(this).find('addr').text();
+							currentContact = address;
+							currentThread = $(this).find('id').text();
+							if ($(this).find('contact').text() != ""){
+								contact = $(this).find('contact').text();
+							}else{
+								contact = address;
+							}
+							$("<div></div>").html("Chat with " + contact).appendTo('#message_container');
+							
+												
+							
+								
+							$("<div class=\"thread\"></div>")
+									.html(contact).appendTo('#thread_container');
+							$(this).find('sms').each(function(){
+									var sender;
+									if ($(this).find('dir').text() == "out"){
+										sender = "Me"
+									}else{
+										sender = contact;
+									}								
+									var msg = $(this).find('msg').text();
+									var date = $(this).find('dt').text();
+									
+									$("<div class=\"message_body\"></div>").html(sender + ": " + msg).appendTo('#message_container');
+								});
+						});
+			}
+		});
+		setTimeout('update()', 5000);
+	});
+
+	var update = function(){
+		$.ajax({
+			type:"GET",
+			url:"/mine/data/?type=0",
+			datatype: "xml",
+			success:
+				//process the received contact list
+				function(xml){
+					
+					$(xml).find('Thread').each(function(){
+						var address = $(xml).find('addr').text();
+						currentContact = address;
+						if ($(this).find('contact').text() != ""){
+							contact = $(this).find('contact').text();
+						}else{
+							contact = address;
+						}
+						$('#message_container').html("");
+						$("<div></div>").html("Chat with " + contact).appendTo('#message_container');
+						
+								
+						
+						$('#thread_container').html("");	
+						$("<div class=\"thread\"></div>")
+								.html(contact).appendTo('#thread_container');
+						
+						$(this).find('sms').each(function(){
+								var sender;
+								if ($(this).find('dir').text() == "out"){
+									sender = "Me"
+								}else{
+									sender = contact;
+								}								
+								var msg = $(this).find('msg').text();
+								var date = $(this).find('dt').text();
+								
+								$("<div class=\"message_body\"></div>").html(sender + ": " + msg).appendTo('#message_container');
+							});
+					});
+		}
+	});
+		setTimeout('update()', 5000);
+	}	
+
+
+	
+			
+</script>
+</head>
+<body>
+
+<div class="header">
+	<h1>WebText Deck</h1>
+</div>
+
+<div class="bodyContainer">
+	<div class="threads">
+	<h2>Threads</h2>
+	<br /><br />
+	<div id="thread_container"></div>
+	</div>
+	<div class="message">
+	<h2>Current Thread</h2>
+	<br /><br />
+		<div id="message_container"></div>
+	
+	</div>
+	<div class="form">
+		<textarea id="message_area" width="50" height="5"></textarea>
+		<div class="charcount">
+			<div id="chars_remaining">160</div> characters remaining.
+		</div>
+		<div class="submit_button">
+			<input type="button" value="Send" id="submit_button" />
+		</div>
+	</div>
+	
+</div>
+
+</body>
+</html>
