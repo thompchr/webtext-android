@@ -22,8 +22,8 @@ Right now, the folder containing all of the files for 'myapp' shoud look like
 Now, we must create the web.xml file.  This file will instruct the server on how to map paths to servlets. Any request string not registered in the web.xml file will be treated as a file name the server will look in the default location for it.
 
 The web.xml file for this application looks like this
-
-  <web-app 
+{{{
+<web-app 
    	xmlns="http://java.sun.com/xml/ns/javaee" 
    	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" 
@@ -39,7 +39,8 @@ The web.xml file for this application looks like this
     <url-pattern>/data/*</url-pattern>
   </servlet-mapping>
 
-  </web-app>
+</web-app>
+}}}
 
 This can be used verbatim assuming no additional servlets are added.
 
