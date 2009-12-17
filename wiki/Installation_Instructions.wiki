@@ -1,7 +1,11 @@
 #summary Instructions for installing WebText for Android
 #labels Featured,Phase-Deploy
 
-In order to install WebText, you must first install iJetty.  This can be accomplished by downloading the iJetty .apk file and then using adb to install it.  After downloading the file, navigate to the directory you downloaded it to.  Assuming you have adb in your path, you can execute the following command
+In order to install WebText, you must first install iJetty.  This can be accomplished by downloading the iJetty .apk file from this site and then using adb to install it.  
+
+*It is imperative that you use the iJetty apk provided from this Google Code page as it has additional permissions required to access the SMS message databases*  It is possible to download iJetty from the source at [http://code.google.com/p/i-jetty/] and rebuild it with the appropriate permissions.  Just as it stands, the apk provided there will crash due to insufficient permissions when attempts are made to read/write to the SMS database or send an SMS.
+
+After downloading the file, navigate to the directory you downloaded it to.  Assuming you have adb in your path, you can execute the following command
 {{{
 adb install <.apk file name>
 }}}
