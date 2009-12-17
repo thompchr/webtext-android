@@ -1,0 +1,77 @@
+#summary Instructions for building WebText.
+#labels Featured,Phase-Deploy
+
+Building WebText is a challenge.  Although WebText is designed for Android, because it runs inside of iJetty, it is not actually an Android application and cannot be used with the Android Eclipse plugin.  All compilation must be done manually.  Additionally, you must manually add the android.jar file to the classpath in order to properly compile the class files.  The android.jar file can be found in the android-sdk/platforms/{platform}/android.jar.
+
+If you use the eclipse project, eclipse will automatically generate the .class files.  If not, you can compile them with your favorite java compiler.  To compile them for dalvik, you will use the dx tool.  This will be in the tools directory which is a subdirectory of the directory containing the android.jar file.  It is important to use the dx version that corresponds to the platform version you are building for.  Once the java class files have been generated, execute
+{{{
+dx --dex --verbose --core-library --output=classes.dex --positions=lines {path-to-bin-directory without trailing slash}
+}}}
+
+The classes.dex file will be generated in the bin directory.  It is imperative that the file be named classes.dex.  
+
+The classes.dex file will be placed in a zip file called classes.zip and placed in the lib directory in the WEB-INF directory.  
+
+Right now, the folder containing all of the files for 'myapp' shoud look like
+
+\myapp
+  \WEB-INF
+    \lib
+      \classes.zip
+
+Now, we must create the web.xml file.  This file will instruct the server on how to map paths to servlets. Any request string not registered in the web.xml file will be treated as a file name the server will look in the default location for it.
+
+The web.xml file for this application looks like this
+
+<web-app 
+   	xmlns="http://java.sun.com/xml/ns/javaee" 
+   	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" 
+   	version="3.0"> 
+
+  <servlet>
+    <servlet-name>data</servlet-name>
+    <servlet-class>org.eece261.webtext.TextServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>data</servlet-name>
+    <url-pattern>/data/*</url-pattern>
+  </servlet-mapping>
+
+</web-app>
+
+This can be used verbatim assuming no additional servlets are added.
+
+The web.xml file goes in WEB-INF so the files now look like
+
+\myapp
+  \WEB-INF
+    \lib
+      \classes.zip
+    \web.xml
+
+Any additional HTML files, such as static content pages, css and scripts can go in the root of the 'myapp' folder.  Any additional folders that are created for these files can also go in this folder.
+
+The end result for this application as it currently is in SVN is as follows
+
+\web-text
+  \WEB-INF
+    \lib
+      \classes.zip (contains only classes.dex)
+    \web.xml
+  \index.html
+  \css
+    \layout.css
+    \styles.css
+  \scripts (contains scripts that aren't used
+
+
+To build this into a war file, open a command prompt in the web-text directory.  Execute
+{{{
+jar cvf web-text.war *
+}}}
+
+The jar file creator (jdk) will need to be in your PATH.
+
+This will create a web-text.war file in the current directory.  From there you can upload it to an HTTP server and download it onto the device.
