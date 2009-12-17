@@ -17,6 +17,6 @@
 	width:75%;
 }
 .form{
-	float:left;
 	width:75%;
+	clear:both;
 }
