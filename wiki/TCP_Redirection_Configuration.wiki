@@ -1,7 +1,7 @@
 #summary Instructions for configuring port redirection to the emulator
 #labels Featured
 
-In order to run web-text on an emulator, you must redirect a TCP port from your computer to the emulator.  iJetty runs on 8080 on the device by default, but this can be changed.  We will use 8080 for this tutorial.  Let's say we want port 8081 on our host machine to point to the device's port 8080. This would allow us to view iJetty on the emulator by visiting http://localhost:8081.
+In order to run web-text on an emulator, you must redirect a TCP port from your computer to the emulator.  iJetty runs on 8080 on the device by default, but this can be changed.  We will use 8080 for this tutorial.  Let's say we want port 8081 on our host machine to point to the device's port 8080. This would allow us to view iJetty on the emulator by visiting http://localhost:8081 from a browser on the host machine.
 
 To do this, telnet to the emulator
 {{{
