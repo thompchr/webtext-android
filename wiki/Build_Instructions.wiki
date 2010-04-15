@@ -1,5 +1,7 @@
 #summary Instructions for building WebText.
-#labels Featured,Phase-Deploy
+#labels Featured,Phase-Deploy,Deprecated
+
+*Note:*  These instructions apply to the code in the tag "eece261milestone."  The current version of WebText does not require these steps and can be used with the Android plugin for eclipse.  Please reference the new instructions for building WebText. (These will be available once the modifications to the codebase are complete and initial testing has been performed.
 
 Building WebText is a challenge.  Although WebText is designed for Android, because it runs inside of iJetty, it is not actually an Android application and cannot be used with the Android Eclipse plugin.  All compilation must be done manually.  Additionally, you must manually add the android.jar file to the classpath in order to properly compile the class files.  The android.jar file can be found in the android-sdk/platforms/{platform}/android.jar.
 
