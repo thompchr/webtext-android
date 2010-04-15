@@ -1,5 +1,5 @@
 #summary Instructions for building WebText.
-#labels Featured,Phase-Deploy,Deprecated
+#labels Phase-Deploy,Deprecated
 
 _*Note:*  These instructions apply to the code in the tag "eece261milestone."  The current version of WebText does not require these steps and can be used with the Android plugin for eclipse.  Please reference the new instructions for building WebText. (These will be available once the modifications to the codebase are complete and initial testing has been performed._
 
