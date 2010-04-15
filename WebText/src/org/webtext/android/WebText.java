@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.mortbay.cometd.continuation.ContinuationCometdServlet;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.handler.HandlerList;
@@ -69,6 +70,9 @@ public class WebText extends Activity {
 		server_ = new Server(port_);
 		Context webtext = new Context(server_, "/webtext");
 		webtext.addServlet(TextServlet.class, "/*");
+		
+		Context pushContext = new Context(server_, "/cometd");
+		pushContext.addServlet(ContinuationCometdServlet.class, "/*");
 
 		WebAppContext webapp = new WebAppContext("/", "/sdcard/webtext/webtext.war");
 		HandlerList hl = new HandlerList();
