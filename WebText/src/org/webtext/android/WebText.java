@@ -49,7 +49,9 @@ public class WebText extends Activity {
 		try{
 			File outFile = new File("/sdcard/webtext/webtext.war");
 			if (!outFile.exists()){
-				outFile.mkdirs();
+				File outdir = new File("/sdcard/webtext");
+				if (!outdir.exists())
+					outdir.mkdirs();
 				outFile.createNewFile();
 				InputStream in = am.open("webtext.war");
 				OutputStream out = new FileOutputStream(outFile);
