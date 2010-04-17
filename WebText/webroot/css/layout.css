@@ -1,0 +1,22 @@
+@CHARSET "ISO-8859-1";
+
+.header{
+}
+
+.bodyContainer{
+	clear:both;
+}
+
+.threads{
+	float:left;
+	width:25%;
+}
+
+.message{
+	float:left;
+	width:75%;
+}
+.form{
+	width:75%;
+	clear:both;
+}
