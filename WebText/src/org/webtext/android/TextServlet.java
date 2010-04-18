@@ -69,6 +69,7 @@ public class TextServlet extends HttpServlet {
 	}
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+		
 		Uri sms;
 		Cursor c;
 		String type = request.getParameter("type");

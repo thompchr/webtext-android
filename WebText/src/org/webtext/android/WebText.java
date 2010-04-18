@@ -53,9 +53,11 @@ public class WebText extends Activity {
 				outdir.mkdirs();
 			
 			File outFile = new File("/sdcard/webtext/webtext.war");
-			if (outFile.exists()) { outFile.delete(); }
-			
-			//This is nothing more than a sanity check.
+
+			if (outFile.exists())
+				outFile.delete();
+			//This is just a sanity check
+
 			if (!outFile.exists()){
 				
 				outFile.createNewFile();
@@ -108,10 +110,7 @@ public class WebText extends Activity {
 		webapp.setWar("/sdcard/webtext/webtext.war");
 		webapp.setContextPath("/");
 		contexts.addHandler(webapp);
-		
-		
-		Log.v(TAG, "I put this in here...");
-		
+
 		try {
 			server_.start();
 		} catch (Exception e) {
