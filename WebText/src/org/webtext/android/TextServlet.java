@@ -57,7 +57,7 @@ public class TextServlet extends HttpServlet {
 
 	public void init(ServletConfig config) throws ServletException{
 		super.init(config);
-		resolver_ = (ContentResolver)getServletContext().getAttribute("org.mortbay.ijetty.contentResolver");
+		resolver_ = (ContentResolver)getServletContext().getAttribute(WebText.CONTENT_RESOLVER_ATTRIBUTE);
 	}
 
 	public ContentResolver getContentResolver(){

@@ -23,10 +23,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.mortbay.cometd.continuation.ContinuationCometdServlet;
-import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.Server;
-import org.mortbay.jetty.handler.HandlerList;
+import org.mortbay.jetty.handler.ContextHandlerCollection;
 import org.mortbay.jetty.servlet.Context;
+import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 import android.app.Activity;
@@ -37,6 +37,7 @@ import android.util.Log;
 public class WebText extends Activity {
 
 	private static final String TAG = "WebText";
+	public static final String CONTENT_RESOLVER_ATTRIBUTE = "org.webtext.android.contentResolver";
 
 	private Server server_;
 	private int port_ = 8080;
@@ -47,22 +48,46 @@ public class WebText extends Activity {
 
 		AssetManager am = getAssets();
 		try{
+			File outdir = new File("/sdcard/webtext");
+			if (!outdir.exists())
+				outdir.mkdirs();
+			
 			File outFile = new File("/sdcard/webtext/webtext.war");
+			if (outFile.exists()) { outFile.delete(); }
+			
+			//This is nothing more than a sanity check.
 			if (!outFile.exists()){
-				File outdir = new File("/sdcard/webtext");
-				if (!outdir.exists())
-					outdir.mkdirs();
+				
 				outFile.createNewFile();
 				InputStream in = am.open("webtext.war");
 				OutputStream out = new FileOutputStream(outFile);
 				byte[] buffer = new byte[1024];
 				int count = in.read(buffer);
 				while(count != -1){
-					out.write(buffer);
+					out.write(buffer, 0, count);
 					count = in.read(buffer);
 				}
 				in.close();
 				out.close();	
+			}
+			
+			File webdef = new File("/sdcard/webtext/webdefault.xml");
+			if (webdef.exists()) { webdef.delete(); }
+			
+			//This is nothing more than a sanity check.
+			if (!webdef.exists()){
+				webdef.createNewFile();
+				InputStream in = am.open("webdefault.xml");
+				OutputStream out = new FileOutputStream(webdef);
+				byte[] buffer = new byte[1024];
+				int count = in.read(buffer);
+				while(count != -1){
+					out.write(buffer, 0, count);
+					count = in.read(buffer);
+				}
+				in.close();
+				out.close();
+				
 			}
 		}catch (IOException ex){
 			Log.e(TAG, "Could not create web files.");
@@ -70,16 +95,22 @@ public class WebText extends Activity {
 		}
 
 		server_ = new Server(port_);
-		Context webtext = new Context(server_, "/webtext");
-		webtext.addServlet(TextServlet.class, "/*");
+		ContextHandlerCollection contexts = new ContextHandlerCollection();
+		server_.setHandler(contexts);
+		Context webtext = new Context(contexts, "/webtext");
+		webtext.addServlet(new ServletHolder(TextServlet.class), "/*");
+		webtext.setAttribute(CONTENT_RESOLVER_ATTRIBUTE, getContentResolver());
 		
-		Context pushContext = new Context(server_, "/cometd");
-		pushContext.addServlet(ContinuationCometdServlet.class, "/*");
+		Context pushContext = new Context(contexts, "/cometd");
+		pushContext.addServlet(new ServletHolder(ContinuationCometdServlet.class), "/*");
 
-		WebAppContext webapp = new WebAppContext("/", "/sdcard/webtext/webtext.war");
-		HandlerList hl = new HandlerList();
-		hl.setHandlers(new Handler[] { webapp } );
+		WebAppContext webapp = new WebAppContext();
+		webapp.setWar("/sdcard/webtext/webtext.war");
+		webapp.setContextPath("/");
+		contexts.addHandler(webapp);
 		
+		
+		Log.v(TAG, "I put this in here...");
 		
 		try {
 			server_.start();
