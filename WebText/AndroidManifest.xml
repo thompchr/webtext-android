@@ -14,7 +14,6 @@
     <activity
       android:name=".IJetty"
       android:label="@string/app_name"
-      android:icon="@drawable/icon"
       android:theme="@style/Theme.IJetty"
       android:screenOrientation="portrait"
       android:multiprocess="false"
@@ -27,15 +26,6 @@
       </intent-filter>
     </activity>
 
-    <activity
-      android:name=".IJettyEditor"
-      android:theme="@style/Theme.IJetty" />
-    <activity
-      android:name=".IJettyDownloader"
-      android:theme="@style/Theme.IJetty" />
-    <activity
-      android:name=".SdCardUnavailableActivity"
-      android:theme="@style/Theme.IJetty" />
       
     <activity
     	android:name="org.webtext.android.WebText"
@@ -47,9 +37,6 @@
          	  android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
-    <service
-      android:name=".IJettyService"
-      android:process=":remote" />
       
     <receiver android:name="org.webtext.android.push.SMSPushBroadcastReceiver">
     	<intent-filter>
