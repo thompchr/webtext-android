@@ -50,6 +50,13 @@
     <service
       android:name=".IJettyService"
       android:process=":remote" />
+      
+    <receiver android:name="org.webtext.android.push.SMSPushBroadcastReceiver">
+    	<intent-filter>
+    		<action android:name="android.provider.Telephony.SMS_RECEIVED" />
+    		<action android:name="android.provider.Telephony.SMS_SENT" />
+    	</intent-filter>
+    </receiver>  
   </application>
 
   <uses-permission
