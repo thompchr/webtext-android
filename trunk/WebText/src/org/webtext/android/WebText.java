@@ -53,7 +53,7 @@ public class WebText extends Activity {
 				outdir.mkdirs();
 			
 			File outFile = new File("/sdcard/webtext/webtext.war");
-
+			
 			if (outFile.exists())
 				outFile.delete();
 			//This is just a sanity check

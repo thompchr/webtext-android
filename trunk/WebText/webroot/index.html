@@ -34,7 +34,7 @@
 					return;
 				}
 				if ($('#message_area').val() != ""){
-					$.post("/mine/data/?type=2",{
+					$.post("/webtext/?type=2",{
 						dest: currentThread,
 						msg: $('#message_area').val()
 					});
@@ -103,7 +103,7 @@
 						});
 			}
 		});
-		//setTimeout('update()', 5000);
+		
 
 		//Register for cometd push updates
 		dojo.require("dojo.io.script");
