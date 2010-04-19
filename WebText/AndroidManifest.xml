@@ -38,7 +38,7 @@
       </intent-filter>
     </activity>
       
-    <receiver android:name="org.webtext.android.push.SMSPushBroadcastReceiver">
+    <receiver android:name="org.webtext.android.services.WebTextService$SMSPushBroadcastReceiver">
     	<intent-filter>
     		<action android:name="android.provider.Telephony.SMS_RECEIVED" />
     		<action android:name="android.provider.Telephony.SMS_SENT" />

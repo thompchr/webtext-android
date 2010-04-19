@@ -17,13 +17,13 @@ package org.webtext.android.push;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.telephony.SmsMessage;
 
 public class SmsPush implements Parcelable {
 	
 	private String body_;
 	private long timestamp_;
 	private String displayAddress_;
-	private String contact_;
 	
 	public static final Parcelable.Creator<SmsPush> CREATOR = new Parcelable.Creator<SmsPush>() {
 
@@ -39,6 +39,18 @@ public class SmsPush implements Parcelable {
 		
 	};
 	
+	public SmsPush(SmsMessage message){
+		body_ = message.getDisplayMessageBody();
+		timestamp_ = message.getTimestampMillis();
+		displayAddress_ = message.getDisplayOriginatingAddress();
+	}
+	
+	public SmsPush(String body, String address, long time){
+		body_ = body;
+		displayAddress_ = address;
+		timestamp_ = time;
+	}
+	
 	public SmsPush(Parcel in){
 		readFromParcel(in);
 	}
@@ -48,12 +60,28 @@ public class SmsPush implements Parcelable {
 		return 0;
 	}
 	@Override
-	public void writeToParcel(Parcel arg0, int arg1) {
-		
+	public void writeToParcel(Parcel out, int arg1) {
+		out.writeString(body_);
+		out.writeString(displayAddress_);
+		out.writeLong(timestamp_);
 	}
 	
 	public void readFromParcel(Parcel in){
-		
+		body_ = in.readString();
+		displayAddress_ = in.readString();
+		timestamp_ = in.readLong();
+	}
+	
+	public String getAddress(){
+		return displayAddress_;
+	}
+	
+	public String getBody(){
+		return body_;
+	}
+	
+	public long getTime(){
+		return timestamp_;
 	}
 	
 
