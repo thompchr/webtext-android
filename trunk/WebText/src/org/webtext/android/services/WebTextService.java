@@ -21,8 +21,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.servlet.ServletContextAttributeEvent;
+import javax.servlet.ServletContextAttributeListener;
+
+import org.cometd.Bayeux;
+import org.cometd.Channel;
+import org.cometd.Client;
 import org.mortbay.cometd.continuation.ContinuationCometdServlet;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.handler.ContextHandlerCollection;
@@ -31,12 +39,14 @@ import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.jetty.webapp.WebAppContext;
 import org.webtext.android.TextServlet;
 import org.webtext.android.WebText;
+import org.webtext.android.push.PushService;
 import org.webtext.android.push.SmsPush;
 import org.webtext.android.services.bindings.IWebTextService;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -51,14 +61,38 @@ public class WebTextService extends Service {
 	private Server server_;
 	private boolean isRunning_ = false;
 	private static final String TAG = "WebTextService";
-	
-	
+		
+	private static final String ACTION_RECEIVE = "android.provider.Telephony.SMS_RECEIVED";
+	private static final String ACTION_SEND = "android.provider.Telephone.SMS_SENT";
+
+	private BroadcastReceiver receiver_ = new BroadcastReceiver(){
+
+		@Override
+		public void onReceive(android.content.Context context, Intent intent) {
+			if (intent.getAction().equals(ACTION_RECEIVE) || intent.getAction().equals(ACTION_SEND)){
+				Bundle bundle = intent.getExtras();
+				Log.v(TAG, "Received broadcast intent: " + intent.getAction());
+				
+				Object[] pdus = (Object[]) bundle.get("pdus");
+				List<SmsPush> msgs = new ArrayList<SmsPush>();
+				
+				for (int i = 0; i < pdus.length; ++i){
+					msgs.add(new SmsPush(SmsMessage.createFromPdu((byte[]) pdus[i])));
+				}
+				
+				pushMessage(msgs);
+				
+			}
+		}
+		
+	};
 
 	private final IWebTextService.Stub binder_ = new IWebTextService.Stub(){
 
 
 		@Override
 		public void startServer() throws RemoteException {
+			Log.d(TAG, "Server start requested");
 			if (!isRunning_){
 				try {
 					server_.start();
@@ -83,6 +117,7 @@ public class WebTextService extends Service {
 
 		@Override
 		public void pushMessages(List<SmsPush> messages) throws RemoteException {
+			pushMessage(messages);
 		}
 
 	};
@@ -95,6 +130,7 @@ public class WebTextService extends Service {
 
 	@Override
 	public void onCreate(){
+		Log.v(TAG, "Creating WebTextService");
 		server_ = new Server(port_);
 		
 		AssetManager am = getAssets();
@@ -139,44 +175,61 @@ public class WebTextService extends Service {
 		
 		Context pushContext = new Context(contexts, "/cometd");
 		pushContext.addServlet(new ServletHolder(ContinuationCometdServlet.class), "/*");
+		pushContext.addEventListener(new ServletContextAttributeListener(){
+
+			@Override
+			public void attributeAdded(ServletContextAttributeEvent arg0) {
+			}
+
+			@Override
+			public void attributeRemoved(ServletContextAttributeEvent arg0) {
+			}
+
+			@Override
+			public void attributeReplaced(ServletContextAttributeEvent event) {
+				if (Bayeux.DOJOX_COMETD_BAYEUX.equals(event.getName()))
+					PushService.launch((Bayeux)event.getValue());
+			}
+			
+		});
 
 		WebAppContext webapp = new WebAppContext();
 		webapp.setWar("/sdcard/webtext/webtext.war");
 		webapp.setContextPath("/");
 		contexts.addHandler(webapp);
+		
+		registerReceiver(receiver_, new IntentFilter(ACTION_RECEIVE));
+		registerReceiver(receiver_, new IntentFilter(ACTION_SEND));
 	}
 	
-	public static class SMSPushBroadcastReceiver extends BroadcastReceiver {
+	public void pushMessage(List<SmsPush> messages){
+		Bayeux b = (Bayeux)server_.getAttribute(Bayeux.DOJOX_COMETD_BAYEUX);
+		if (b == null)
+			return;
+		
+		Channel channel = b.getChannel("/webtext/push", true);
+		Client client = b.newClient("client");
+		
+		for(SmsPush m: messages){
+			Map<String, Object> map = new HashMap<String, Object>();
+			StringBuilder builder = new StringBuilder();
+			builder.append("<message>");
+			builder.append("<addr>");
+			builder.append(m.getAddress());
+			builder.append("</addr><time>");
+			builder.append(m.getTime());
+			builder.append("</time><body>");
+			builder.append(m.getBody());
+			builder.append("</body></message>");
+			
+			map.put("payload", builder.toString());
+			channel.publish(client, map, "messageId");
+		}
+		
+		
+	}
+	
 
-				private static final String TAG = "SMSPushBroadcastReceiver";
-				
-				private static final String ACTION_RECEIVE = "android.provider.Telephony.SMS_RECEIVED";
-				private static final String ACTION_SEND = "android.provider.Telephone.SMS_SENT";
-
-				public SMSPushBroadcastReceiver(){
-					
-				}
-				
-				@Override
-				public void onReceive(android.content.Context arg0, Intent arg1) {
-					if (arg1.getAction().equals(ACTION_RECEIVE) || arg1.getAction().equals(ACTION_SEND)){
-						Bundle bundle = arg1.getExtras();
-						Log.v(TAG, "Received broadcast intent: " + arg1.getAction());
-						
-						Object[] pdus = (Object[]) bundle.get("pdus");
-						List<SmsPush> msgs = new ArrayList<SmsPush>();
-						
-						for (int i = 0; i < pdus.length; ++i){
-							msgs.add(new SmsPush(SmsMessage.createFromPdu((byte[]) pdus[i])));
-						}
-						
-					}
-
-				}
-
-				
-				
-			}
 
 
 

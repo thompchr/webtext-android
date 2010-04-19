@@ -16,14 +16,32 @@
 
 package org.webtext.android.push;
 
+import java.util.Map;
+
 import org.cometd.Bayeux;
+import org.cometd.Client;
 import org.mortbay.cometd.BayeuxService;
 
 public class PushService extends BayeuxService {
+	
+	private static PushService instance_;
+	
+	public static PushService launch(Bayeux bayeux){
+		if (instance_ == null)
+			instance_ = new PushService(bayeux);
+		return instance_;
+	}
 
-	public PushService(Bayeux bayeux, String name) {
-		super(bayeux, name);
+	private PushService(Bayeux bayeux) {
+		super(bayeux, "webtext");
+		subscribe("/webtext/push", "receiveMsg");
 		
+	}
+	
+
+	public void receiveMsg(Client client, String channel, 
+			Map<String, String> data, String messageId){
+		String msg = data.get("data").trim();
 	}
 
 }
