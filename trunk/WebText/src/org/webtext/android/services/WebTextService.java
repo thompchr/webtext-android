@@ -20,6 +20,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.mortbay.cometd.continuation.ContinuationCometdServlet;
 import org.mortbay.jetty.Server;
@@ -33,10 +35,13 @@ import org.webtext.android.push.SmsPush;
 import org.webtext.android.services.bindings.IWebTextService;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.telephony.SmsMessage;
 import android.util.Log;
 
 public class WebTextService extends Service {
@@ -46,12 +51,11 @@ public class WebTextService extends Service {
 	private Server server_;
 	private boolean isRunning_ = false;
 	private static final String TAG = "WebTextService";
+	
+	
 
 	private final IWebTextService.Stub binder_ = new IWebTextService.Stub(){
 
-		@Override
-		public void pushMessages(SmsPush[] messages) throws RemoteException {
-		}
 
 		@Override
 		public void startServer() throws RemoteException {
@@ -75,6 +79,10 @@ public class WebTextService extends Service {
 					e.printStackTrace();
 				}
 			}
+		}
+
+		@Override
+		public void pushMessages(List<SmsPush> messages) throws RemoteException {
 		}
 
 	};
@@ -137,6 +145,38 @@ public class WebTextService extends Service {
 		webapp.setContextPath("/");
 		contexts.addHandler(webapp);
 	}
+	
+	public static class SMSPushBroadcastReceiver extends BroadcastReceiver {
+
+				private static final String TAG = "SMSPushBroadcastReceiver";
+				
+				private static final String ACTION_RECEIVE = "android.provider.Telephony.SMS_RECEIVED";
+				private static final String ACTION_SEND = "android.provider.Telephone.SMS_SENT";
+
+				public SMSPushBroadcastReceiver(){
+					
+				}
+				
+				@Override
+				public void onReceive(android.content.Context arg0, Intent arg1) {
+					if (arg1.getAction().equals(ACTION_RECEIVE) || arg1.getAction().equals(ACTION_SEND)){
+						Bundle bundle = arg1.getExtras();
+						Log.v(TAG, "Received broadcast intent: " + arg1.getAction());
+						
+						Object[] pdus = (Object[]) bundle.get("pdus");
+						List<SmsPush> msgs = new ArrayList<SmsPush>();
+						
+						for (int i = 0; i < pdus.length; ++i){
+							msgs.add(new SmsPush(SmsMessage.createFromPdu((byte[]) pdus[i])));
+						}
+						
+					}
+
+				}
+
+				
+				
+			}
 
 
 

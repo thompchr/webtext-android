@@ -9,6 +9,6 @@ interface IWebTextService {
 	
 	void stopServer();
 	
-	void pushMessages(in SmsPush[] messages);
+	void pushMessages(in List<SmsPush> messages);
 }
 	
