@@ -28,8 +28,7 @@
 
       
     <activity
-    	android:name="org.webtext.android.WebText"
-    	android:launchMode="singleInstance">
+    	android:name="org.webtext.android.WebText" android:launchMode="standard">
     	<intent-filter>
         	<action
         	  android:name="android.intent.action.MAIN" />
@@ -37,13 +36,9 @@
          	  android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
-      
-    <receiver android:name="org.webtext.android.services.WebTextService$SMSPushBroadcastReceiver">
-    	<intent-filter>
-    		<action android:name="android.provider.Telephony.SMS_RECEIVED" />
-    		<action android:name="android.provider.Telephony.SMS_SENT" />
-    	</intent-filter>
-    </receiver>  
+    
+    <service android:name="org.webtext.android.services.WebTextService" />
+       
   </application>
 
   <uses-permission
