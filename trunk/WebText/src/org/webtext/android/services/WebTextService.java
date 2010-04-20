@@ -31,6 +31,9 @@ import javax.servlet.ServletContextAttributeListener;
 import org.cometd.Bayeux;
 import org.cometd.Channel;
 import org.cometd.Client;
+import org.cometd.Message;
+import org.cometd.SecurityPolicy;
+import org.mortbay.cometd.AbstractBayeux;
 import org.mortbay.cometd.continuation.ContinuationCometdServlet;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.handler.ContextHandlerCollection;
@@ -61,9 +64,13 @@ public class WebTextService extends Service {
 	private Server server_;
 	private boolean isRunning_ = false;
 	private static final String TAG = "WebTextService";
-		
+	
+	private int testHandshakeFailure_;
+
 	private static final String ACTION_RECEIVE = "android.provider.Telephony.SMS_RECEIVED";
 	private static final String ACTION_SEND = "android.provider.Telephone.SMS_SENT";
+
+	private ContinuationCometdServlet comet_servlet_ = new ContinuationCometdServlet();
 
 	private BroadcastReceiver receiver_ = new BroadcastReceiver(){
 
@@ -72,19 +79,19 @@ public class WebTextService extends Service {
 			if (intent.getAction().equals(ACTION_RECEIVE) || intent.getAction().equals(ACTION_SEND)){
 				Bundle bundle = intent.getExtras();
 				Log.v(TAG, "Received broadcast intent: " + intent.getAction());
-				
+
 				Object[] pdus = (Object[]) bundle.get("pdus");
 				List<SmsPush> msgs = new ArrayList<SmsPush>();
-				
+
 				for (int i = 0; i < pdus.length; ++i){
 					msgs.add(new SmsPush(SmsMessage.createFromPdu((byte[]) pdus[i])));
 				}
-				
+
 				pushMessage(msgs);
-				
+
 			}
 		}
-		
+
 	};
 
 	private final IWebTextService.Stub binder_ = new IWebTextService.Stub(){
@@ -96,6 +103,33 @@ public class WebTextService extends Service {
 			if (!isRunning_){
 				try {
 					server_.start();
+					PushService.launch(comet_servlet_.getBayeux());
+					comet_servlet_.getBayeux().setSecurityPolicy(new SecurityPolicy() {
+						
+						@Override
+						public boolean canSubscribe(Client arg0, String arg1, Message arg2) {
+							
+							return true;
+						}
+						
+						@Override
+						public boolean canPublish(Client arg0, String arg1, Message arg2) {
+							// TODO Auto-generated method stub
+							return true;
+						}
+						
+						@Override
+						public boolean canHandshake(Message arg0) {
+							// TODO Auto-generated method stub
+							return true;
+						}
+						
+						@Override
+						public boolean canCreate(Client arg0, String arg1, Message arg2) {
+							// TODO Auto-generated method stub
+							return true;
+						}
+					});
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -132,21 +166,21 @@ public class WebTextService extends Service {
 	public void onCreate(){
 		Log.v(TAG, "Creating WebTextService");
 		server_ = new Server(port_);
-		
+
 		AssetManager am = getAssets();
 		try{
 			File outdir = new File("/sdcard/webtext");
 			if (!outdir.exists())
 				outdir.mkdirs();
-			
+
 			File outFile = new File("/sdcard/webtext/webtext.war");
-			
+
 			if (outFile.exists())
 				outFile.delete();
 			//This is just a sanity check
 
 			if (!outFile.exists()){
-				
+
 				outFile.createNewFile();
 				InputStream in = am.open("webtext.war");
 				OutputStream out = new FileOutputStream(outFile);
@@ -159,8 +193,8 @@ public class WebTextService extends Service {
 				in.close();
 				out.close();	
 			}
-			
-			
+
+
 		}catch (IOException ex){
 			Log.e(TAG, "Could not create web files.");
 			ex.printStackTrace();
@@ -172,13 +206,20 @@ public class WebTextService extends Service {
 		Context webtext = new Context(contexts, "/webtext");
 		webtext.addServlet(new ServletHolder(TextServlet.class), "/*");
 		webtext.setAttribute(WebText.CONTENT_RESOLVER_ATTRIBUTE, getContentResolver());
-		
+
 		Context pushContext = new Context(contexts, "/cometd");
-		pushContext.addServlet(new ServletHolder(ContinuationCometdServlet.class), "/*");
+		ServletHolder cometd_holder = new ServletHolder(comet_servlet_);
+		cometd_holder.setInitParameter("timeout","240000");
+        cometd_holder.setInitParameter("interval","0");
+        cometd_holder.setInitParameter("multiFrameInterval","1500");
+		pushContext.addServlet(cometd_holder, "/*");
 		pushContext.addEventListener(new ServletContextAttributeListener(){
 
+			
 			@Override
 			public void attributeAdded(ServletContextAttributeEvent arg0) {
+				if(arg0.getName().equals(Bayeux.DOJOX_COMETD_BAYEUX))
+					PushService.launch((Bayeux)arg0.getValue());				
 			}
 
 			@Override
@@ -190,26 +231,31 @@ public class WebTextService extends Service {
 				if (Bayeux.DOJOX_COMETD_BAYEUX.equals(event.getName()))
 					PushService.launch((Bayeux)event.getValue());
 			}
-			
-		});
 
+		});
+		
+		
+
+		
 		WebAppContext webapp = new WebAppContext();
 		webapp.setWar("/sdcard/webtext/webtext.war");
 		webapp.setContextPath("/");
 		contexts.addHandler(webapp);
-		
+
 		registerReceiver(receiver_, new IntentFilter(ACTION_RECEIVE));
 		registerReceiver(receiver_, new IntentFilter(ACTION_SEND));
 	}
-	
+
+
 	public void pushMessage(List<SmsPush> messages){
-		Bayeux b = (Bayeux)server_.getAttribute(Bayeux.DOJOX_COMETD_BAYEUX);
+		Bayeux b = comet_servlet_.getBayeux();
 		if (b == null)
 			return;
-		
+
 		Channel channel = b.getChannel("/webtext/push", true);
-		Client client = b.newClient("client");
 		
+		Client client = b.newClient("client");
+
 		for(SmsPush m: messages){
 			Map<String, Object> map = new HashMap<String, Object>();
 			StringBuilder builder = new StringBuilder();
@@ -221,14 +267,15 @@ public class WebTextService extends Service {
 			builder.append("</time><body>");
 			builder.append(m.getBody());
 			builder.append("</body></message>");
-			
+
 			map.put("payload", builder.toString());
+			Log.d(TAG, "Publishing message to " + channel.getSubscriberCount() + " subscribers");
 			channel.publish(client, map, "messageId");
 		}
-		
-		
+
+
 	}
-	
+
 
 
 
