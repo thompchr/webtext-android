@@ -33,7 +33,7 @@ public class WebText extends Activity {
 	private static final String TAG = "WebText";
 	public static final String CONTENT_RESOLVER_ATTRIBUTE = "org.webtext.android.contentResolver";
 	private IBinder binder_ = null;
-	
+
 	private ServiceConnection webTextServiceConnection_ = new ServiceConnection(){
 
 		@Override
@@ -44,7 +44,7 @@ public class WebText extends Activity {
 			try {
 				pipe.startServer();
 			} catch (RemoteException e) {
-				
+
 				e.printStackTrace();
 			}
 		}
@@ -53,19 +53,32 @@ public class WebText extends Activity {
 		public void onServiceDisconnected(ComponentName arg0) {
 			binder_ = null;
 		}
-		
+
 	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		
-		Log.v(TAG, "Starting service");
-		
-		Intent intent = new Intent(this, WebTextService.class);
-		startService(intent);
-		bindService(intent, webTextServiceConnection_, BIND_AUTO_CREATE);
 
+
+
+	}
+
+	@Override
+	protected void onResume(){
+		super.onResume();
+		Log.v(TAG, "Starting service");
+
+		Intent intent = new Intent(this, WebTextService.class);
+		
+		bindService(intent, webTextServiceConnection_, BIND_AUTO_CREATE);
+	}
+
+	@Override
+	protected void onPause(){
+		super.onPause();
+		unbindService(webTextServiceConnection_);
 	}
 
 }

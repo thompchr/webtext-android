@@ -22,8 +22,11 @@ import org.cometd.Bayeux;
 import org.cometd.Client;
 import org.mortbay.cometd.BayeuxService;
 
+import android.util.Log;
+
 public class PushService extends BayeuxService {
 	
+	private static final String TAG = "PushService";
 	private static PushService instance_;
 	
 	public static PushService launch(Bayeux bayeux){
@@ -36,12 +39,18 @@ public class PushService extends BayeuxService {
 		super(bayeux, "webtext");
 		subscribe("/webtext/push", "receiveMsg");
 		
-	}
-	
+	}	
 
 	public void receiveMsg(Client client, String channel, 
 			Map<String, String> data, String messageId){
-		String msg = data.get("data").trim();
+		Log.v(TAG, "Received: " + data.get("payload"));
+	}
+	
+	@Override
+	protected void exception (Client fromClient, Client toClient,
+			Map<String, Object> msg, Throwable th) {
+		th.printStackTrace();
+		super.exception(fromClient, toClient, msg, th);
 	}
 
 }

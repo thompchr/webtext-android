@@ -109,12 +109,16 @@
 		dojo.require("dojo.io.script");
         dojo.require("dojox.cometd");
         dojo.addOnLoad(function(){
-			dojox.cometd.init("cometd");
-			dojox.cometd.subscribe("/webtext/push", false, pushHandler);
+			dojox.cometd.init("/cometd");
+			var h = dojox.cometd.subscribe("/webtext/push", pushHandler);
+			h.addCallback(function(){
+				console.debug("subscription to /foo/bar established");
+			});
         });
 	});
 
 	var pushHandler = function(data){
+		alert(data);
 		var thrdid = $(data).find("msg").attr("id");
 		var div = $("#"+thrdid);
 		var sender = $(data).find("contact").text();
