@@ -33,7 +33,6 @@ import org.cometd.Channel;
 import org.cometd.Client;
 import org.cometd.Message;
 import org.cometd.SecurityPolicy;
-import org.mortbay.cometd.AbstractBayeux;
 import org.mortbay.cometd.continuation.ContinuationCometdServlet;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.handler.ContextHandlerCollection;
@@ -42,7 +41,6 @@ import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.jetty.webapp.WebAppContext;
 import org.webtext.android.TextServlet;
 import org.webtext.android.WebText;
-import org.webtext.android.push.PushService;
 import org.webtext.android.push.SmsPush;
 import org.webtext.android.services.bindings.IWebTextService;
 
@@ -103,7 +101,7 @@ public class WebTextService extends Service {
 			if (!isRunning_){
 				try {
 					server_.start();
-					PushService.launch(comet_servlet_.getBayeux());
+					//ushService.launch(comet_servlet_.getBayeux());
 					comet_servlet_.getBayeux().setSecurityPolicy(new SecurityPolicy() {
 						
 						@Override
@@ -167,38 +165,38 @@ public class WebTextService extends Service {
 		Log.v(TAG, "Creating WebTextService");
 		server_ = new Server(port_);
 
-		AssetManager am = getAssets();
-		try{
-			File outdir = new File("/sdcard/webtext");
-			if (!outdir.exists())
-				outdir.mkdirs();
-
-			File outFile = new File("/sdcard/webtext/webtext.war");
-
-			if (outFile.exists())
-				outFile.delete();
-			//This is just a sanity check
-
-			if (!outFile.exists()){
-
-				outFile.createNewFile();
-				InputStream in = am.open("webtext.war");
-				OutputStream out = new FileOutputStream(outFile);
-				byte[] buffer = new byte[1024];
-				int count = in.read(buffer);
-				while(count != -1){
-					out.write(buffer, 0, count);
-					count = in.read(buffer);
-				}
-				in.close();
-				out.close();	
-			}
-
-
-		}catch (IOException ex){
-			Log.e(TAG, "Could not create web files.");
-			ex.printStackTrace();
-		}
+//		AssetManager am = getAssets();
+//		try{
+//			File outdir = new File("/sdcard/webtext");
+//			if (!outdir.exists())
+//				outdir.mkdirs();
+//
+//			File outFile = new File("/sdcard/webtext/webtext.war");
+//
+//			if (outFile.exists())
+//				outFile.delete();
+//			//This is just a sanity check
+//
+//			if (!outFile.exists()){
+//
+//				outFile.createNewFile();
+//				InputStream in = am.open("webtext.war");
+//				OutputStream out = new FileOutputStream(outFile);
+//				byte[] buffer = new byte[1024];
+//				int count = in.read(buffer);
+//				while(count != -1){
+//					out.write(buffer, 0, count);
+//					count = in.read(buffer);
+//				}
+//				in.close();
+//				out.close();	
+//			}
+//
+//
+//		}catch (IOException ex){
+//			Log.e(TAG, "Could not create web files.");
+//			ex.printStackTrace();
+//		}
 
 		server_ = new Server(port_);
 		ContextHandlerCollection contexts = new ContextHandlerCollection();
@@ -209,17 +207,19 @@ public class WebTextService extends Service {
 
 		Context pushContext = new Context(contexts, "/cometd");
 		ServletHolder cometd_holder = new ServletHolder(comet_servlet_);
-		cometd_holder.setInitParameter("timeout","240000");
-        cometd_holder.setInitParameter("interval","0");
-        cometd_holder.setInitParameter("multiFrameInterval","1500");
+		cometd_holder.setInitParameter("timeout","20000");
+        cometd_holder.setInitParameter("interval","100");
+        cometd_holder.setInitParameter("maxInterval","10000");
+        cometd_holder.setInitParameter("multiFrameInterval","5000");
+        cometd_holder.setInitOrder(2);
 		pushContext.addServlet(cometd_holder, "/*");
 		pushContext.addEventListener(new ServletContextAttributeListener(){
 
 			
 			@Override
 			public void attributeAdded(ServletContextAttributeEvent arg0) {
-				if(arg0.getName().equals(Bayeux.DOJOX_COMETD_BAYEUX))
-					PushService.launch((Bayeux)arg0.getValue());				
+				if(arg0.getName().equals(Bayeux.DOJOX_COMETD_BAYEUX));
+					//PushService.launch((Bayeux)arg0.getValue());				
 			}
 
 			@Override
@@ -228,8 +228,8 @@ public class WebTextService extends Service {
 
 			@Override
 			public void attributeReplaced(ServletContextAttributeEvent event) {
-				if (Bayeux.DOJOX_COMETD_BAYEUX.equals(event.getName()))
-					PushService.launch((Bayeux)event.getValue());
+				if (Bayeux.DOJOX_COMETD_BAYEUX.equals(event.getName()));
+					//PushService.launch((Bayeux)event.getValue());
 			}
 
 		});
@@ -264,12 +264,12 @@ public class WebTextService extends Service {
 			builder.append(m.getAddress());
 			builder.append("</addr><time>");
 			builder.append(m.getTime());
-			builder.append("</time><body>");
+			builder.append("</time><msg_body>");
 			builder.append(m.getBody());
-			builder.append("</body></message>");
+			builder.append("</msg_body></message>");
 
 			map.put("payload", builder.toString());
-			Log.d(TAG, "Publishing message to " + channel.getSubscriberCount() + " subscribers");
+			Log.d(TAG, "Publishing message to " + channel.getSubscribers().size() + " subscribers");
 			channel.publish(client, map, "messageId");
 		}
 

@@ -16,6 +16,10 @@
 
 package org.webtext.android;
 
+import java.io.IOException;
+import java.net.Socket;
+
+import org.webtext.android.R;
 import org.webtext.android.services.WebTextService;
 import org.webtext.android.services.bindings.IWebTextService;
 
@@ -27,6 +31,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.TextView;
 
 public class WebText extends Activity {
 
@@ -59,7 +64,18 @@ public class WebText extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.webtext_main);
 		
+		String ip = "";
+		try{
+			Socket sock = new Socket("www.google.com", 80);
+			ip = sock.getLocalAddress().getHostAddress();
+			sock.close();
+		}catch (IOException ex){
+			ex.printStackTrace();
+		}
+		
+		((TextView)findViewById(R.id.ip_address)).setText(ip);
 
 
 
