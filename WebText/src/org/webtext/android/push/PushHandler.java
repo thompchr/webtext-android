@@ -31,7 +31,7 @@ public class PushHandler {
 		Channel c = b.getChannel("/webtext/push", false);
 		Map<String, Object> message = new HashMap<String, Object>();
 		message.put("WebTextServlet:", msg);
-		c.publish(b.newClient("webtext_server"), message, "WebText Server Message");
+		
 	}
 
 }

@@ -1,4 +1,4 @@
- /**************************************************************************
+/**************************************************************************
  * Copyright 2010 Chris Thompson                                           *
  *                                                                         *
  * Licensed under the Apache License, Version 2.0 (the "License");         *
@@ -25,10 +25,10 @@ import org.mortbay.cometd.BayeuxService;
 import android.util.Log;
 
 public class PushService extends BayeuxService {
-	
+
 	private static final String TAG = "PushService";
 	private static PushService instance_;
-	
+
 	public static PushService launch(Bayeux bayeux){
 		if (instance_ == null)
 			instance_ = new PushService(bayeux);
@@ -38,14 +38,14 @@ public class PushService extends BayeuxService {
 	private PushService(Bayeux bayeux) {
 		super(bayeux, "webtext");
 		subscribe("/webtext/push", "receiveMsg");
-		
+
 	}	
 
 	public void receiveMsg(Client client, String channel, 
 			Map<String, String> data, String messageId){
 		Log.v(TAG, "Received: " + data.get("payload"));
 	}
-	
+
 	@Override
 	protected void exception (Client fromClient, Client toClient,
 			Map<String, Object> msg, Throwable th) {

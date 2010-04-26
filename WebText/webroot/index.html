@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="css/styles.css" />
 <script src="http://www.google.com/jsapi"></script>
 <script src="scripts/structs.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.4/dojo/dojo.xd.js" type="text/javascript"></script>
+<script src="scripts/dojo.js" type="text/javascript"></script>
 <script>
 	var threads = new Array();
 	var currentContact;
@@ -105,25 +105,23 @@
 		});
 		
 
+	    //setTimeout(update, 1500);
 		//Register for cometd push updates
 		dojo.require("dojo.io.script");
         dojo.require("dojox.cometd");
         dojo.addOnLoad(function(){
 			dojox.cometd.init("/cometd");
 			var h = dojox.cometd.subscribe("/webtext/push", pushHandler);
-			h.addCallback(function(){
-				console.debug("subscription to /foo/bar established");
-			});
         });
 	});
 
 	var pushHandler = function(data){
-		alert(data);
-		var thrdid = $(data).find("msg").attr("id");
-		var div = $("#"+thrdid);
-		var sender = $(data).find("contact").text();
-		var msg = $(data).find("msg_body");
-		$("<div class=\"message_body\"></div>").html(sender + ": " + msg).appendTo(div);
+		var xml = data.data.payload;
+		var sender = $(xml).find("addr").text();
+		
+		var msg = $(xml).find("msg_body").text();
+		alert(sender+":"+msg);
+		$("<div class=\"message_body\"></div>").html(sender + ": " + msg).appendTo("#"+address);
 
 		var address = $(data).find("msg").attr("addr");
 		$("#thread_"+address).stop().css("background-color", "#FFFF9C")
@@ -134,7 +132,7 @@
 	var update = function(){
 		$.ajax({
 			type:"GET",
-			url:"/mine/data/?type=0",
+			url:"/webtext/?type=0",
 			datatype: "xml",
 			success:
 				//process the received contact list
