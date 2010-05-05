@@ -9,10 +9,19 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.webtext.android.services.VerificationService;
+import org.webtext.android.services.bindings.IVerificationService;
+
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.provider.Contacts.People;
 import android.telephony.gsm.SmsManager;
 
@@ -51,6 +60,9 @@ public class TextServlet extends HttpServlet {
 	private static final String DATE = "date";
 	private static final String BODY = "body";
 	private static final String TYPE = "type";
+	
+	private boolean bound_ = false;
+	IVerificationService binder_;
 
 
 	private ContentResolver resolver_;
@@ -69,7 +81,10 @@ public class TextServlet extends HttpServlet {
 	}
 
 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
-		
+		if (!verifyIP(request.getRemoteAddr())){
+			response.sendError(HttpServletResponse.SC_FORBIDDEN);
+			return;
+		}
 		Uri sms;
 		Cursor c;
 		String type = request.getParameter("type");
@@ -208,6 +223,39 @@ public class TextServlet extends HttpServlet {
 		}
 		return null;
 	}
+	
+	private boolean verifyIP(String ip){
+		
+		Context context = (Context)getServletContext().getAttribute(WebText.CONTEXT_ATTRIBUTE);
+		Intent intent = new Intent(context, VerificationService.class);
+		context.bindService(intent, connection_, Context.BIND_AUTO_CREATE);
+		while(!bound_);
+		boolean result = false;
+		try {
+			result =  binder_.verifyIPAddress(ip);
+			
+		} catch (RemoteException e) {
+			e.printStackTrace();
+			
+		}
+		context.unbindService(connection_);
+		return result;
+		
+	}
+	
+	private ServiceConnection connection_ = new ServiceConnection(){
+
+		@Override
+		public void onServiceConnected(ComponentName arg0, IBinder arg1) {
+			binder_ = IVerificationService.Stub.asInterface(arg1);
+			bound_ = true;
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+		}
+		
+	};
 
 
 

@@ -15,11 +15,6 @@
  **************************************************************************/
 package org.webtext.android.services;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +34,7 @@ import org.mortbay.jetty.handler.ContextHandlerCollection;
 import org.mortbay.jetty.servlet.Context;
 import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.jetty.webapp.WebAppContext;
+import org.webtext.android.PairingServlet;
 import org.webtext.android.TextServlet;
 import org.webtext.android.WebText;
 import org.webtext.android.push.SmsPush;
@@ -48,7 +44,6 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -204,6 +199,11 @@ public class WebTextService extends Service {
 		Context webtext = new Context(contexts, "/webtext");
 		webtext.addServlet(new ServletHolder(TextServlet.class), "/*");
 		webtext.setAttribute(WebText.CONTENT_RESOLVER_ATTRIBUTE, getContentResolver());
+		webtext.setAttribute(WebText.CONTEXT_ATTRIBUTE, this);
+		
+		Context pairing = new Context(contexts, "/pair");
+		pairing.addServlet(new ServletHolder(PairingServlet.class), "/*");
+		pairing.setAttribute(WebText.CONTEXT_ATTRIBUTE, this);
 
 		Context pushContext = new Context(contexts, "/cometd");
 		ServletHolder cometd_holder = new ServletHolder(comet_servlet_);
@@ -244,6 +244,9 @@ public class WebTextService extends Service {
 
 		registerReceiver(receiver_, new IntentFilter(ACTION_RECEIVE));
 		registerReceiver(receiver_, new IntentFilter(ACTION_SEND));
+		
+		Intent verification = new Intent(this, VerificationService.class);
+		startService(verification);
 	}
 
 
