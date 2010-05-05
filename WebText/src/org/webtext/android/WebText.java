@@ -37,6 +37,7 @@ public class WebText extends Activity {
 
 	private static final String TAG = "WebText";
 	public static final String CONTENT_RESOLVER_ATTRIBUTE = "org.webtext.android.contentResolver";
+	public static final String CONTEXT_ATTRIBUTE = "org.webtext.android.context";
 	private IBinder binder_ = null;
 
 	private ServiceConnection webTextServiceConnection_ = new ServiceConnection(){

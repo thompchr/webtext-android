@@ -15,21 +15,84 @@
  **************************************************************************/
 package org.webtext.android;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.webtext.android.services.VerificationService;
+import org.webtext.android.services.bindings.IVerificationService;
+
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.os.RemoteException;
+
 public class PairingServlet extends HttpServlet {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	private boolean bound_ = false;
+	IVerificationService binder_;
+
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp){
-		
+		doPost(req, resp);
 	}
 	
 	@Override
 	public void doPost(HttpServletRequest req, HttpServletResponse resp){
 		
+		Context context = (Context)getServletContext().getAttribute(WebText.CONTEXT_ATTRIBUTE);
+		Intent intent = new Intent(context, VerificationService.class);
+		context.bindService(intent, connection_, Context.BIND_AUTO_CREATE);
+		while(!bound_);
+		try {
+			binder_.addIPAddress(req.getRemoteAddr());
+			
+		} catch (RemoteException e) {
+			e.printStackTrace();
+			try {
+				resp.getWriter().write("Could not add IP address");
+			} catch (IOException e1) {
+				
+				e1.printStackTrace();
+			}
+			
+		}
+		
+		try {
+			resp.getWriter().write(
+					"IP address successfully paired, you may now access your text messages");
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+		
+		context.unbindService(connection_);
+		
 	}
+	
+	private ServiceConnection connection_ = new ServiceConnection(){
+
+		@Override
+		public void onServiceConnected(ComponentName arg0, IBinder arg1) {
+			binder_ = IVerificationService.Stub.asInterface(arg1);
+			bound_ = true;
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+			bound_ = false;
+		}
+		
+	};
 	
 
 }

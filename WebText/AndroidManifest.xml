@@ -38,6 +38,7 @@
     </activity>
     
     <service android:name="org.webtext.android.services.WebTextService" />
+    <service android:name="org.webtext.android.services.VerificationService" />
        
   </application>
 
